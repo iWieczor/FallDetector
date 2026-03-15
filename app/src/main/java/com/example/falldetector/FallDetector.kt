@@ -1,0 +1,85 @@
+package com.example.falldetector
+
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import kotlin.math.sqrt
+
+class FallDetector(
+    context: Context,
+    private val onFallDetected: () -> Unit
+) : SensorEventListener {
+
+    // Progi detekcji - możesz je dostosować
+    companion object {
+        // Swobodny spadek: przyspieszenie bliskie 0 (brak siły odśrodkowej)
+        private const val FREE_FALL_THRESHOLD = 3.0f   // m/s²
+        // Uderzenie: duże przyspieszenie po upadku
+        private const val IMPACT_THRESHOLD = 25.0f     // m/s²
+        // Czas między wykryciem spadku a uderzeniem (ms)
+        private const val FALL_TIME_WINDOW = 1000L
+    }
+
+    private val sensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val accelerometer =
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+    private var freeFallDetectedAt: Long = 0
+    private var isWaitingForImpact = false
+
+    fun start() {
+        accelerometer?.let {
+            sensorManager.registerListener(
+                this,
+                it,
+                SensorManager.SENSOR_DELAY_FASTEST
+            )
+        }
+    }
+
+    fun stop() {
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
+
+        val x = event.values[0]
+        val y = event.values[1]
+        val z = event.values[2]
+
+        // Oblicz całkowite przyspieszenie (wektor wypadkowy)
+        val totalAcceleration = sqrt(x * x + y * y + z * z)
+
+        val now = System.currentTimeMillis()
+
+        when {
+            // FAZA 1: Wykrycie swobodnego spadku
+            totalAcceleration < FREE_FALL_THRESHOLD && !isWaitingForImpact -> {
+                freeFallDetectedAt = now
+                isWaitingForImpact = true
+            }
+
+            // FAZA 2: Wykrycie uderzenia po spadku (w oknie czasowym)
+            isWaitingForImpact && totalAcceleration > IMPACT_THRESHOLD -> {
+                val timeSinceFall = now - freeFallDetectedAt
+                if (timeSinceFall in 1..FALL_TIME_WINDOW) {
+                    isWaitingForImpact = false
+                    onFallDetected() // informujemy UI o upadku!
+                }
+            }
+
+            // Reset jeśli minął czas okna
+            isWaitingForImpact && (now - freeFallDetectedAt) > FALL_TIME_WINDOW -> {
+                isWaitingForImpact = false
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // Nie potrzebujemy tej metody, ale musimy ją zaimplementować
+    }
+}
