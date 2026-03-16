@@ -1,4 +1,4 @@
-package com.example.falldetector
+package com.example.falldetector.sensors
 
 import android.content.Context
 import android.hardware.Sensor

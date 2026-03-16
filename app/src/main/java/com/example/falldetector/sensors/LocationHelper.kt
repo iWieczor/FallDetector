@@ -1,4 +1,4 @@
-package com.example.falldetector
+package com.example.falldetector.sensors
 
 import android.annotation.SuppressLint
 import android.content.Context

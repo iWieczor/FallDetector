@@ -1,4 +1,4 @@
-package com.example.falldetector
+package com.example.falldetector.helpers
 
 import android.telephony.SmsManager
 
@@ -6,7 +6,6 @@ class SmsHelper {
 
     fun sendFallAlert(phoneNumber: String, latitude: Double, longitude: Double) {
         val message = """
-            ⚠️ WYKRYTO UPADEK!
             Lokalizacja:
             https://maps.google.com/?q=$latitude,$longitude
         """.trimIndent()
