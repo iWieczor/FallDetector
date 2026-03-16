@@ -6,14 +6,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import com.example.falldetector.sensors.FallDetector
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.falldetector.presentation.FallViewModel
 import com.example.falldetector.presentation.MainScreen
+import com.example.falldetector.presentation.SettingsScreen
+import com.example.falldetector.presentation.SettingsViewModel
+import com.example.falldetector.sensors.FallDetector
 
 class MainActivity : ComponentActivity() {
 
-    // viewModels() tworzy ViewModel i automatycznie zarządza jego cyklem życia
-    private val viewModel: FallViewModel by viewModels()
+    private val fallViewModel: FallViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
     private lateinit var fallDetector: FallDetector
 
     private val permissionRequest = registerForActivityResult(
@@ -31,13 +36,31 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        // FallDetector wywołuje teraz metodę ViewModelu — nie manipuluje stanem bezpośrednio
         fallDetector = FallDetector(this) {
-            viewModel.onFallDetected()
+            fallViewModel.onFallDetected()
         }
 
         setContent {
-            MainScreen(viewModel = viewModel)
+            // NavController zarządza nawigacją między ekranami
+            val navController = rememberNavController()
+
+            NavHost(
+                navController = navController,
+                startDestination = "main"
+            ) {
+                composable("main") {
+                    MainScreen(
+                        viewModel = fallViewModel,
+                        onNavigateToSettings = { navController.navigate("settings") }
+                    )
+                }
+                composable("settings") {
+                    SettingsScreen(
+                        viewModel = settingsViewModel,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
         }
     }
 

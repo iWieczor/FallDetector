@@ -6,20 +6,30 @@ import androidx.core.content.ContextCompat
 import android.Manifest
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.falldetector.helpers.SettingsDataStore
 import com.example.falldetector.helpers.SmsHelper
 import com.example.falldetector.model.FallState
+import com.example.falldetector.model.UserSettings
 import com.example.falldetector.sensors.LocationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class FallViewModel(application: Application) : AndroidViewModel(application) {
 
-    // StateFlow to nowoczesny sposób trzymania stanu — Compose go obserwuje
+    private val dataStore = SettingsDataStore(application)
+    private val settings = dataStore.settingsFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = UserSettings()
+    )
+
     private val _uiState = MutableStateFlow(FallState())
     val uiState: StateFlow<FallState> = _uiState.asStateFlow()
 
@@ -27,39 +37,33 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
     private val smsHelper = SmsHelper()
     private var countdownJob: Job? = null
 
-    val emergencyNumber = "48123456789" // później przeniesiemy do ustawień
-
-    // Wywoływane przez FallDetector gdy wykryje upadek
     fun onFallDetected() {
-        // Anuluj poprzednie odliczanie jeśli trwało
         countdownJob?.cancel()
-
         _uiState.update {
             it.copy(
                 fallDetected = true,
                 fallCount = it.fallCount + 1,
                 locationText = null,
                 smsStatus = null,
-                secondsLeft = 10
+                secondsLeft = settings.value.countdownSeconds
             )
         }
-
         startCountdown()
     }
 
-    // Odliczanie 10 sekund — działa w tle dzięki viewModelScope
     private fun startCountdown() {
+        val seconds = settings.value.countdownSeconds
+        _uiState.update { it.copy(secondsLeft = seconds) }
+
         countdownJob = viewModelScope.launch {
-            repeat(10) { tick ->
+            repeat(seconds) { tick ->
                 delay(1000L)
-                _uiState.update { it.copy(secondsLeft = 9 - tick) }
+                _uiState.update { it.copy(secondsLeft = seconds - 1 - tick) }
             }
-            // 10 sekund minęło — pobierz GPS i wyślij SMS
             fetchLocationAndSendSms()
         }
     }
 
-    // Użytkownik kliknął "Wszystko OK"
     fun onDismiss() {
         countdownJob?.cancel()
         _uiState.update {
@@ -94,6 +98,9 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         locationHelper.getLastLocation { location ->
+            // Czytamy numer w momencie wysyłki — zawsze aktualny
+            val currentNumber = settings.value.emergencyNumber
+
             if (location != null) {
                 val locationText = "%.6f, %.6f".format(
                     location.latitude,
@@ -103,12 +110,12 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (hasSms) {
                     smsHelper.sendFallAlert(
-                        phoneNumber = emergencyNumber,
+                        phoneNumber = currentNumber,
                         latitude = location.latitude,
                         longitude = location.longitude
                     )
                     _uiState.update {
-                        it.copy(smsStatus = "SMS wysłany na $emergencyNumber")
+                        it.copy(smsStatus = "SMS wysłany na $currentNumber")
                     }
                 } else {
                     _uiState.update {
