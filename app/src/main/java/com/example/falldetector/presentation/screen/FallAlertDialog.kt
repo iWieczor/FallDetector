@@ -1,4 +1,4 @@
-package com.example.falldetector.presentation
+package com.example.falldetector.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

@@ -1,4 +1,4 @@
-package com.example.falldetector.presentation
+package com.example.falldetector.presentation.screen
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -10,8 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.falldetector.presentation.viewmodel.FallViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -1,4 +1,4 @@
-package com.example.falldetector.presentation
+package com.example.falldetector.presentation.viewmodel
 
 import android.app.Application
 import android.content.pm.PackageManager
@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 class FallViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -52,10 +53,11 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun startCountdown() {
-        val seconds = settings.value.countdownSeconds
-        _uiState.update { it.copy(secondsLeft = seconds) }
-
+        // Czytaj z Flow w coroutine — zawsze aktualna wartość
         countdownJob = viewModelScope.launch {
+            val seconds = dataStore.settingsFlow.first().countdownSeconds
+            _uiState.update { it.copy(secondsLeft = seconds) }
+
             repeat(seconds) { tick ->
                 delay(1000L)
                 _uiState.update { it.copy(secondsLeft = seconds - 1 - tick) }
@@ -76,8 +78,10 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun fetchLocationAndSendSms() {
+    private suspend fun fetchLocationAndSendSms() {
         val context = getApplication<Application>()
+        // Czytaj aktualny numer z Flow
+        val currentSettings = dataStore.settingsFlow.first()
 
         val hasLocation = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION
@@ -98,9 +102,6 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         locationHelper.getLastLocation { location ->
-            // Czytamy numer w momencie wysyłki — zawsze aktualny
-            val currentNumber = settings.value.emergencyNumber
-
             if (location != null) {
                 val locationText = "%.6f, %.6f".format(
                     location.latitude,
@@ -110,17 +111,15 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (hasSms) {
                     smsHelper.sendFallAlert(
-                        phoneNumber = currentNumber,
+                        phoneNumber = currentSettings.emergencyNumber,
                         latitude = location.latitude,
                         longitude = location.longitude
                     )
                     _uiState.update {
-                        it.copy(smsStatus = "SMS wysłany na $currentNumber")
+                        it.copy(smsStatus = "SMS wysłany na ${currentSettings.emergencyNumber}")
                     }
                 } else {
-                    _uiState.update {
-                        it.copy(smsStatus = "Brak uprawnień do SMS")
-                    }
+                    _uiState.update { it.copy(smsStatus = "Brak uprawnień do SMS") }
                 }
             } else {
                 _uiState.update {

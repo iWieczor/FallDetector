@@ -1,4 +1,4 @@
-package com.example.falldetector.presentation
+package com.example.falldetector.presentation.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

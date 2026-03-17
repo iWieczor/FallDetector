@@ -9,10 +9,10 @@ import androidx.activity.viewModels
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.falldetector.presentation.FallViewModel
-import com.example.falldetector.presentation.MainScreen
-import com.example.falldetector.presentation.SettingsScreen
-import com.example.falldetector.presentation.SettingsViewModel
+import com.example.falldetector.presentation.viewmodel.FallViewModel
+import com.example.falldetector.presentation.screen.MainScreen
+import com.example.falldetector.presentation.screen.SettingsScreen
+import com.example.falldetector.presentation.viewmodel.SettingsViewModel
 import com.example.falldetector.sensors.FallDetector
 
 class MainActivity : ComponentActivity() {
