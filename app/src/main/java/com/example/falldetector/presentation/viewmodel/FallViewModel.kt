@@ -38,7 +38,7 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
     private val smsHelper = SmsHelper()
     private var countdownJob: Job? = null
 
-    fun onFallDetected() {
+    fun onFallDetected(impactValue: Float) {
         countdownJob?.cancel()
         _uiState.update {
             it.copy(
@@ -46,7 +46,8 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
                 fallCount = it.fallCount + 1,
                 locationText = null,
                 smsStatus = null,
-                secondsLeft = settings.value.countdownSeconds
+                secondsLeft = settings.value.countdownSeconds,
+                triggerImpact = impactValue
             )
         }
         startCountdown()

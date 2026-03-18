@@ -10,7 +10,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun HomeContent(fallCount: Int) {
+fun HomeContent(fallCount: Int,
+                impactThreshold: Float  ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -26,6 +27,11 @@ fun HomeContent(fallCount: Int) {
             text = "Monitorowanie aktywne",
             color = Color(0xFF4CAF50),
             fontSize = 16.sp
+        )
+        Text(
+            text = "Próg uderzenia: ${"%.1f".format(impactThreshold)} m/s²",
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = 13.sp
         )
         if (fallCount > 0) {
             Text(

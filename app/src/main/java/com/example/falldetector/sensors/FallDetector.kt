@@ -9,7 +9,7 @@ import kotlin.math.sqrt
 
 class FallDetector(
     context: Context,
-    private val onFallDetected: () -> Unit
+    private val onFallDetected: (impactValue: Float) -> Unit
 ) : SensorEventListener {
 
     // Progi detekcji trzeba sprawdzić eksperymentalnie
@@ -70,7 +70,7 @@ class FallDetector(
                 val timeSinceFall = now - freeFallDetectedAt
                 if (timeSinceFall in 1..FALL_TIME_WINDOW) {
                     isWaitingForImpact = false
-                    onFallDetected()
+                    onFallDetected(totalAcceleration)
                 }
             }
 

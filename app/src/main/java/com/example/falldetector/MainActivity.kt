@@ -38,8 +38,8 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        fallDetector = FallDetector(this) {
-            fallViewModel.onFallDetected()
+        fallDetector = FallDetector(this) { impactValue ->
+            fallViewModel.onFallDetected(impactValue)
         }
 
         // Obserwuj zmiany w settingsach i po zmianie wysyla nowy prod do FallDetectora
@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
                 composable("main") {
                     MainScreen(
                         viewModel = fallViewModel,
+                        settingsViewModel = settingsViewModel,  // dodaj
                         onNavigateToSettings = { navController.navigate("settings") }
                     )
                 }

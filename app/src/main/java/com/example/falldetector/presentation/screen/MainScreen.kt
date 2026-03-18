@@ -12,14 +12,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.falldetector.presentation.viewmodel.FallViewModel
+import com.example.falldetector.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: FallViewModel,
-    onNavigateToSettings: () -> Unit  // ← nowy parametr
+    settingsViewModel: SettingsViewModel,
+    onNavigateToSettings: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()  // dodaj
 
     Scaffold(
         topBar = {
@@ -49,7 +52,8 @@ fun MainScreen(
                 .background(Color(0xFF1A1A2E)),
             contentAlignment = Alignment.Center
         ) {
-            HomeContent(fallCount = state.fallCount)
+            HomeContent(fallCount = state.fallCount,
+                impactThreshold = settings.fallThreshold)
 
             AnimatedVisibility(
                 visible = state.fallDetected,
@@ -60,6 +64,7 @@ fun MainScreen(
                     secondsLeft = state.secondsLeft,
                     locationText = state.locationText,
                     smsStatus = state.smsStatus,
+                    triggerImpact = state.triggerImpact,
                     onDismiss = { viewModel.onDismiss() }
                 )
             }

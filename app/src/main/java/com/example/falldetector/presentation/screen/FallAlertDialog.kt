@@ -18,6 +18,7 @@ fun FallAlertDialog(
     secondsLeft: Int,
     locationText: String?,
     smsStatus: String?,
+    triggerImpact: Float?,
     onDismiss: () -> Unit
 ) {
 
@@ -53,6 +54,14 @@ fun FallAlertDialog(
                     fontSize = 15.sp,
                     textAlign = TextAlign.Center
                 )
+                if (triggerImpact != null) {
+                    Text(
+                        text = "Siła uderzenia: ${"%.1f".format(triggerImpact)} m/s²",
+                        color = Color.White.copy(alpha = 0.75f),
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
 
                 LinearProgressIndicator(
                     progress = { secondsLeft / 10f },
