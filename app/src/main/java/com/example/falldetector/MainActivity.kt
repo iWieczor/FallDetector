@@ -14,6 +14,8 @@ import com.example.falldetector.presentation.screen.MainScreen
 import com.example.falldetector.presentation.screen.SettingsScreen
 import com.example.falldetector.presentation.viewmodel.SettingsViewModel
 import com.example.falldetector.sensors.FallDetector
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -38,6 +40,13 @@ class MainActivity : ComponentActivity() {
 
         fallDetector = FallDetector(this) {
             fallViewModel.onFallDetected()
+        }
+
+        // Obserwuj zmiany w settingsach i po zmianie wysyla nowy prod do FallDetectora
+        lifecycleScope.launch {
+            settingsViewModel.settings.collect { settings ->
+                fallDetector.impactThreshold = settings.fallThreshold
+            }
         }
 
         setContent {

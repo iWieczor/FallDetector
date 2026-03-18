@@ -12,15 +12,16 @@ class FallDetector(
     private val onFallDetected: () -> Unit
 ) : SensorEventListener {
 
-    // Progi detekcji - możesz je dostosować
+    // Progi detekcji trzeba sprawdzić eksperymentalnie
+    // teraz odpala sie przy gwaltownym odlozeniu telefonu na biurko
+    // stala IMPACT_THRESHOLD do przerobienia i do zaciagniecia z SettingsDataStore
     companion object {
-        // Swobodny spadek: przyspieszenie bliskie 0 (brak siły odśrodkowej)
         private const val FREE_FALL_THRESHOLD = 3.0f   // m/s²
-        // Uderzenie: duże przyspieszenie po upadku
-        private const val IMPACT_THRESHOLD = 25.0f     // m/s²
-        // Czas między wykryciem spadku a uderzeniem (ms)
-        private const val FALL_TIME_WINDOW = 1000L
+    //    private const val IMPACT_THRESHOLD = 25.0f     // m/s² - zamiana na zmienna zeby settingsy dzialaly
+        private const val FALL_TIME_WINDOW = 1000L     // 1000ms
     }
+
+    var impactThreshold: Float = 25.0f
 
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -64,11 +65,12 @@ class FallDetector(
             }
 
             // FAZA 2: Wykrycie uderzenia po spadku (w oknie czasowym)
-            isWaitingForImpact && totalAcceleration > IMPACT_THRESHOLD -> {
+            //IMPACT_THRESHOLD do przerobienia zeby zasysal aktualna wartosc z settingsow
+            isWaitingForImpact && totalAcceleration > impactThreshold -> {
                 val timeSinceFall = now - freeFallDetectedAt
                 if (timeSinceFall in 1..FALL_TIME_WINDOW) {
                     isWaitingForImpact = false
-                    onFallDetected() // informujemy UI o upadku!
+                    onFallDetected()
                 }
             }
 
