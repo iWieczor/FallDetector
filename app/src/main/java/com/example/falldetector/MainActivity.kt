@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -25,14 +25,12 @@ import com.example.falldetector.presentation.screen.MainScreen
 import com.example.falldetector.presentation.screen.SettingsScreen
 import com.example.falldetector.presentation.viewmodel.FallViewModel
 import com.example.falldetector.presentation.viewmodel.SettingsViewModel
-import com.example.falldetector.sensors.FallDetector
-import kotlinx.coroutines.launch
+import com.example.falldetector.services.FallDetectorService
 
 class MainActivity : ComponentActivity() {
 
     private val fallViewModel: FallViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
-    private lateinit var fallDetector: FallDetector
 
     private val permissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -45,18 +43,12 @@ class MainActivity : ComponentActivity() {
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.SEND_SMS
+                Manifest.permission.SEND_SMS,
+                Manifest.permission.POST_NOTIFICATIONS
             )
         )
 
-        fallDetector = FallDetector(this) { fallViewModel.onFallDetected() }
-
-        // Obserwuj zmiany w settingsach i po zmianie wysyla nowy prod do FallDetectora
-        lifecycleScope.launch {
-            settingsViewModel.settings.collect { settings ->
-                fallDetector.impactThreshold = settings.fallThreshold
-            }
-        }
+        startForegroundService(Intent(this, FallDetectorService::class.java))
 
         setContent {
             val navController = rememberNavController()
@@ -97,13 +89,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        fallDetector.start()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        fallDetector.stop()
-    }
 }

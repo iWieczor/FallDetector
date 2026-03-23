@@ -11,6 +11,7 @@ import com.example.falldetector.helpers.SmsHelper
 import com.example.falldetector.model.FallState
 import com.example.falldetector.model.UserSettings
 import com.example.falldetector.sensors.LocationHelper
+import com.example.falldetector.services.FallDetectorService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,14 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
     private val locationHelper = LocationHelper(application)
     private val smsHelper = SmsHelper()
     private var countdownJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            FallDetectorService.fallEvents.collect {
+                onFallDetected()
+            }
+        }
+    }
 
     fun onFallDetected() {
         if (_uiState.value.fallDetected) return
