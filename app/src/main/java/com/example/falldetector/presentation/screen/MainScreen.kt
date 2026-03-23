@@ -22,7 +22,7 @@ fun MainScreen(
     onNavigateToSettings: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()  // dodaj
+    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -64,7 +64,6 @@ fun MainScreen(
                     secondsLeft = state.secondsLeft,
                     locationText = state.locationText,
                     smsStatus = state.smsStatus,
-                    triggerImpact = state.triggerImpact,
                     onDismiss = { viewModel.onDismiss() }
                 )
             }

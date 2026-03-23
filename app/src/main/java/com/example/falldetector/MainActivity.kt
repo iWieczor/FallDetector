@@ -38,9 +38,7 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        fallDetector = FallDetector(this) { impactValue ->
-            fallViewModel.onFallDetected(impactValue)
-        }
+        fallDetector = FallDetector(this) { fallViewModel.onFallDetected() }
 
         // Obserwuj zmiany w settingsach i po zmianie wysyla nowy prod do FallDetectora
         lifecycleScope.launch {

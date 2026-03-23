@@ -9,16 +9,14 @@ import kotlin.math.sqrt
 
 class FallDetector(
     context: Context,
-    private val onFallDetected: (impactValue: Float) -> Unit
+    private val onFallDetected: () -> Unit
 ) : SensorEventListener {
 
-    // Progi detekcji trzeba sprawdzić eksperymentalnie
-    // teraz odpala sie przy gwaltownym odlozeniu telefonu na biurko
-    // stala IMPACT_THRESHOLD do przerobienia i do zaciagniecia z SettingsDataStore
+    // Progi detekcji trzeba sprawdzić eksperymentalnie, jako prototyp moze byc jak jest w komentarzach
     companion object {
-        private const val FREE_FALL_THRESHOLD = 3.0f   // m/s²
-    //    private const val IMPACT_THRESHOLD = 25.0f     // m/s² - zamiana na zmienna zeby settingsy dzialaly
+        private const val FREE_FALL_THRESHOLD = 3.0f   // 3m/s²
         private const val FALL_TIME_WINDOW = 1000L     // 1000ms
+        private const val MIN_FALL_DURATION = 200L     // min. 200ms
     }
 
     var impactThreshold: Float = 25.0f
@@ -65,12 +63,11 @@ class FallDetector(
             }
 
             // FAZA 2: Wykrycie uderzenia po spadku (w oknie czasowym)
-            //IMPACT_THRESHOLD do przerobienia zeby zasysal aktualna wartosc z settingsow
             isWaitingForImpact && totalAcceleration > impactThreshold -> {
                 val timeSinceFall = now - freeFallDetectedAt
-                if (timeSinceFall in 1..FALL_TIME_WINDOW) {
+                if (timeSinceFall in MIN_FALL_DURATION..FALL_TIME_WINDOW) {
                     isWaitingForImpact = false
-                    onFallDetected(totalAcceleration)
+                    onFallDetected()
                 }
             }
 
