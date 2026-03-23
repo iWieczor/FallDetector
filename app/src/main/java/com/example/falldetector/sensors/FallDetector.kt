@@ -16,7 +16,7 @@ class FallDetector(
     companion object {
         private const val FREE_FALL_THRESHOLD = 3.0f   // 3m/s²
         private const val FALL_TIME_WINDOW = 1000L     // 1000ms
-        private const val MIN_FALL_DURATION = 200L     // min. 200ms
+        private const val MIN_FALL_DURATION = 300L     // min. 200ms
     }
 
     var impactThreshold: Float = 25.0f
