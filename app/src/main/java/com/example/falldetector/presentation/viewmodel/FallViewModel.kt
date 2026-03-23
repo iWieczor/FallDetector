@@ -39,6 +39,7 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
     private var countdownJob: Job? = null
 
     fun onFallDetected() {
+        if (_uiState.value.fallDetected) return
         countdownJob?.cancel()
         _uiState.update {
             it.copy(
@@ -73,7 +74,6 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
                 fallDetected = false,
                 locationText = null,
                 smsStatus = null,
-                secondsLeft = 10
             )
         }
     }
