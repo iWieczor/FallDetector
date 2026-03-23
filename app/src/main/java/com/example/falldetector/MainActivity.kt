@@ -61,10 +61,10 @@ class MainActivity : ComponentActivity() {
         startForegroundService(Intent(this, FallDetectorService::class.java))
 
         val activity = this
+        val notificationManager = getSystemService(NotificationManager::class.java)
         setContent {
             val navController = rememberNavController()
             val fallState by fallViewModel.uiState.collectAsStateWithLifecycle()
-            val notificationManager = getSystemService(NotificationManager::class.java)
             var showFullScreenIntentDialog by remember {
                 mutableStateOf(
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
@@ -121,6 +121,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     FallAlertDialog(
                         secondsLeft = fallState.secondsLeft,
+                        totalSeconds = fallState.totalSeconds,
                         locationText = fallState.locationText,
                         smsStatus = fallState.smsStatus,
                         onDismiss = { fallViewModel.onDismiss() }

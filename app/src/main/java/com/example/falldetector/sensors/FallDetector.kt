@@ -19,15 +19,15 @@ class FallDetector(
         private const val MIN_FALL_DURATION = 300L     // min. 200ms
     }
 
-    var impactThreshold: Float = 25.0f
+    @Volatile var impactThreshold: Float = 25.0f
 
     private val sensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val accelerometer =
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-    private var freeFallDetectedAt: Long = 0
-    private var isWaitingForImpact = false
+    @Volatile private var freeFallDetectedAt: Long = 0
+    @Volatile private var isWaitingForImpact = false
 
     fun start() {
         accelerometer?.let {
