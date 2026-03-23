@@ -8,5 +8,4 @@ data class FallState(
     val locationText: String? = null,
     val smsStatus: String? = null,
     val secondsLeft: Int = 10,
- //   val triggerImpact: Float? = null //pozostalosc po wysylaniu sily upadku po uderzeniu
 )

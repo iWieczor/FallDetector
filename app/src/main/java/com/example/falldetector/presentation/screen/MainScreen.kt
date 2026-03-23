@@ -18,12 +18,9 @@ import com.example.falldetector.presentation.viewmodel.SettingsViewModel
 @Composable
 fun MainScreen(
     viewModel: FallViewModel,
-    settingsViewModel: SettingsViewModel,
     onNavigateToSettings: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,8 +49,7 @@ fun MainScreen(
                 .background(Color(0xFF1A1A2E)),
             contentAlignment = Alignment.Center
         ) {
-            HomeContent(fallCount = state.fallCount,
-                impactThreshold = settings.fallThreshold)
+            HomeContent(fallCount = state.fallCount)
 
             AnimatedVisibility(
                 visible = state.fallDetected,

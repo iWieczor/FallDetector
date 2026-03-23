@@ -58,7 +58,6 @@ class MainActivity : ComponentActivity() {
                 composable("main") {
                     MainScreen(
                         viewModel = fallViewModel,
-                        settingsViewModel = settingsViewModel,  // dodaj
                         onNavigateToSettings = { navController.navigate("settings") }
                     )
                 }

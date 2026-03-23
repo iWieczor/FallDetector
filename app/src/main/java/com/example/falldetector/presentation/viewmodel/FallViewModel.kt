@@ -47,7 +47,6 @@ class FallViewModel(application: Application) : AndroidViewModel(application) {
                 locationText = null,
                 smsStatus = null,
                 secondsLeft = settings.value.countdownSeconds,
-             //   triggerImpact = impactValue //pozostalosc po wyswietlaniu sily upadku
             )
         }
         startCountdown()

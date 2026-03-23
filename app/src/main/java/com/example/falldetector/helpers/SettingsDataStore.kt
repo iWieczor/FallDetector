@@ -18,7 +18,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 class SettingsDataStore(private val context: Context) {
 
     companion object {
-        val EMERGENCY_NUMBER = stringPreferencesKey("emergency_number") //Duze litery bo to stala wskazujaca miejsce gdzie sa zmienne
+        val EMERGENCY_NUMBER = stringPreferencesKey("emergency_number")
         val COUNTDOWN_SECONDS = intPreferencesKey("countdown_seconds")
         val FALL_THRESHOLD = floatPreferencesKey("fall_threshold")
     }
