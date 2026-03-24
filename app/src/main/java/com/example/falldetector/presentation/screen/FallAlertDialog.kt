@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun FallAlertDialog(
     secondsLeft: Int,
+    totalSeconds: Int,
     locationText: String?,
     smsStatus: String?,
     onDismiss: () -> Unit
@@ -55,7 +56,7 @@ fun FallAlertDialog(
                 )
 
                 LinearProgressIndicator(
-                    progress = { secondsLeft / 10f },
+                    progress = { if (totalSeconds > 0) secondsLeft / totalSeconds.toFloat() else 0f },
                     modifier = Modifier.fillMaxWidth(),
                     color = Color.White,
                     trackColor = Color.White.copy(alpha = 0.3f)

@@ -1,8 +1,10 @@
 package com.example.falldetector.helpers
 
+import android.content.Context
 import android.telephony.SmsManager
+import android.util.Log
 
-class SmsHelper {
+class SmsHelper(private val context: Context) {
 
     fun sendFallAlert(phoneNumber: String, latitude: Double, longitude: Double) {
         val message = """
@@ -11,7 +13,7 @@ class SmsHelper {
         """.trimIndent()
 
         try {
-            val smsManager = SmsManager.getDefault()
+            val smsManager = context.getSystemService(SmsManager::class.java)
             // divideMessage obsługuje SMS dłuższy niż 160 znaków
             val parts = smsManager.divideMessage(message)
             smsManager.sendMultipartTextMessage(
@@ -22,7 +24,7 @@ class SmsHelper {
                 null
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("SmsHelper", "Błąd wysyłania SMS na $phoneNumber", e)
         }
     }
 }

@@ -7,5 +7,6 @@ data class FallState(
     val fallCount: Int = 0,
     val locationText: String? = null,
     val smsStatus: String? = null,
-    val secondsLeft: Int = 10,
+    val secondsLeft: Int = 0,
+    val totalSeconds: Int = 0,
 )

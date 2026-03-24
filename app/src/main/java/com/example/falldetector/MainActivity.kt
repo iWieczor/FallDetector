@@ -1,6 +1,10 @@
 package com.example.falldetector
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Intent
+import androidx.core.net.toUri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,10 +17,15 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -25,14 +34,12 @@ import com.example.falldetector.presentation.screen.MainScreen
 import com.example.falldetector.presentation.screen.SettingsScreen
 import com.example.falldetector.presentation.viewmodel.FallViewModel
 import com.example.falldetector.presentation.viewmodel.SettingsViewModel
-import com.example.falldetector.sensors.FallDetector
-import kotlinx.coroutines.launch
+import com.example.falldetector.services.FallDetectorService
 
 class MainActivity : ComponentActivity() {
 
     private val fallViewModel: FallViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
-    private lateinit var fallDetector: FallDetector
 
     private val permissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -41,26 +48,52 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        permissionRequest.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.SEND_SMS
-            )
+        val permissions = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.SEND_SMS
         )
-
-        fallDetector = FallDetector(this) { fallViewModel.onFallDetected() }
-
-        // Obserwuj zmiany w settingsach i po zmianie wysyla nowy prod do FallDetectora
-        lifecycleScope.launch {
-            settingsViewModel.settings.collect { settings ->
-                fallDetector.impactThreshold = settings.fallThreshold
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         }
+        permissionRequest.launch(permissions.toTypedArray())
 
+        startForegroundService(Intent(this, FallDetectorService::class.java))
+
+        val activity = this
+        val notificationManager = getSystemService(NotificationManager::class.java)
         setContent {
             val navController = rememberNavController()
             val fallState by fallViewModel.uiState.collectAsStateWithLifecycle()
+            var showFullScreenIntentDialog by remember {
+                mutableStateOf(
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                        !notificationManager.canUseFullScreenIntent()
+                )
+            }
+
+            if (showFullScreenIntentDialog) {
+                AlertDialog(
+                    onDismissRequest = { showFullScreenIntentDialog = false },
+                    title = { Text("Wymagane uprawnienie") },
+                    text = { Text("Aby alert upadku mógł pojawić się gdy ekran jest wyłączony, wymagane jest uprawnienie 'Wyświetlanie na pierwszym planie'.") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showFullScreenIntentDialog = false
+                            activity.startActivity(
+                                Intent("android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENTS").apply {
+                                    data = "package:${activity.packageName}".toUri()
+                                }
+                            )
+                        }) { Text("Przejdź do ustawień") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showFullScreenIntentDialog = false }) {
+                            Text("Pomiń")
+                        }
+                    }
+                )
+            }
 
             Box(modifier = Modifier.fillMaxSize()) {
                 NavHost(
@@ -88,6 +121,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     FallAlertDialog(
                         secondsLeft = fallState.secondsLeft,
+                        totalSeconds = fallState.totalSeconds,
                         locationText = fallState.locationText,
                         smsStatus = fallState.smsStatus,
                         onDismiss = { fallViewModel.onDismiss() }
@@ -97,13 +131,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        fallDetector.start()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        fallDetector.stop()
-    }
 }
