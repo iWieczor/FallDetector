@@ -2,6 +2,7 @@ package com.example.falldetector.helpers
 
 import android.content.Context
 import android.telephony.SmsManager
+import android.util.Log
 
 class SmsHelper(private val context: Context) {
 
@@ -23,7 +24,7 @@ class SmsHelper(private val context: Context) {
                 null
             )
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("SmsHelper", "Błąd wysyłania SMS na $phoneNumber", e)
         }
     }
 }

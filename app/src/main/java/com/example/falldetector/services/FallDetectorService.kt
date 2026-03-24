@@ -71,15 +71,17 @@ class FallDetectorService : Service() {
                 fallHandlingJob?.cancel()
             }
         }
+
+        fallDetector.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(MONITORING_NOTIFICATION_ID, createMonitoringNotification())
-        fallDetector.start()
         return START_STICKY
     }
 
     override fun onDestroy() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
         fallDetector.stop()
         serviceScope.cancel()
         super.onDestroy()

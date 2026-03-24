@@ -26,7 +26,7 @@ class SettingsDataStore(private val context: Context) {
     // Flow automatycznie emituje nowe wartości gdy ustawienia się zmienią
     val settingsFlow: Flow<UserSettings> = context.dataStore.data.map { prefs ->
         UserSettings(
-            emergencyNumber = prefs[EMERGENCY_NUMBER] ?: "48123456789",
+            emergencyNumber = prefs[EMERGENCY_NUMBER] ?: "",
             countdownSeconds = prefs[COUNTDOWN_SECONDS] ?: 10,
             fallThreshold = prefs[FALL_THRESHOLD] ?: 25.0f
         )
