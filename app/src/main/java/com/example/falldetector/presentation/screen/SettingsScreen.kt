@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.falldetector.presentation.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,6 +26,9 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // Lokalne stany pól tekstowych — aktualizują się gdy użytkownik pisze
     var numberInput by remember(settings.emergencyNumber) {
@@ -60,6 +65,9 @@ fun SettingsScreen(
                 )
             )
         },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
         containerColor = Color(0xFF1A1A2E)
     ) { padding ->
         Column(
@@ -89,7 +97,11 @@ fun SettingsScreen(
                     fontSize = 12.sp
                 )
                 Button(
-                    onClick = { viewModel.saveEmergencyNumber(numberInput) },
+                    onClick = {
+                        keyboardController?.hide()
+                        viewModel.saveEmergencyNumber(numberInput)
+                        scope.launch { snackbarHostState.showSnackbar("Numer alarmowy zapisany") }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF4CAF50)
                     ),
@@ -117,9 +129,13 @@ fun SettingsScreen(
                 )
                 Button(
                     onClick = {
+                        keyboardController?.hide()
                         val seconds = countdownInput.toIntOrNull()
                         if (seconds != null && seconds in 5..30) {
                             viewModel.saveCountdownSeconds(seconds)
+                            scope.launch { snackbarHostState.showSnackbar("Czas odliczania zapisany") }
+                        } else {
+                            scope.launch { snackbarHostState.showSnackbar("Podaj wartość od 5 do 30 sekund") }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -141,7 +157,10 @@ fun SettingsScreen(
                 Slider(
                     value = thresholdSlider,
                     onValueChange = { thresholdSlider = it },
-                    onValueChangeFinished = { viewModel.saveFallThreshold(thresholdSlider) },
+                    onValueChangeFinished = {
+                        viewModel.saveFallThreshold(thresholdSlider)
+                        scope.launch { snackbarHostState.showSnackbar("Czułość detekcji zapisana") }
+                    },
                     valueRange = 15f..40f,
                     steps = 24,
                     colors = SliderDefaults.colors(
