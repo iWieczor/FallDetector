@@ -56,7 +56,6 @@ class FallDetectorService : Service() {
 
         fallDetector = FallDetector(this) {
             fallEvents.tryEmit(Unit)
-            showFallAlert()
             handleFall()
         }
 
@@ -93,6 +92,7 @@ class FallDetectorService : Service() {
         fallHandlingJob?.cancel()
         fallHandlingJob = serviceScope.launch {
             val settings = dataStore.settingsFlow.first()
+            showFallAlert(settings.countdownSeconds)
             delay(settings.countdownSeconds * 1000L)
             fetchLocationAndSendSms(settings)
         }
@@ -167,7 +167,7 @@ class FallDetectorService : Service() {
             .build()
     }
 
-    private fun showFallAlert() {
+    private fun showFallAlert(countdownSeconds: Int) {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
@@ -184,7 +184,7 @@ class FallDetectorService : Service() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(pendingIntent, true)
             .setAutoCancel(true)
-            .setTimeoutAfter(10_000)
+            .setTimeoutAfter(countdownSeconds * 1000L)
             .build()
 
         getSystemService(NotificationManager::class.java)
